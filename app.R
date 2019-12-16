@@ -20,27 +20,38 @@ msg <- list(
 
 ui <- fluidPage(
   
-  tags$div(
-    style = "padding: 50px; border: 1px solid gray; width: 500px;",
-    
-    shinyinboxUI("box1")
-  ),
-  tags$div(
-    style = "padding: 50px; border: 1px solid gray; width: 500px;",
-    
-
-            textAreaInput("txt_message", "Bericht"),
-            
-            selectInput("txt_message_user_tags",
-                        label="Notificatie gebruiker",
-                        choices = letters, #all_users,
-                        selected = NULL,
-                        multiple=TRUE),
-            
-            actionButton("txt_send", "Opslaan", icon = icon("envelope")),
-            tags$br(),
-            textOutput("txt_bericht_user")
+  includeScript("www/selectedMessages.js"),
+  fluidRow(
+    column(6,
+           tags$div(
+             style = "padding: 50px; border: 1px solid gray; width: 500px;",
+             
+             shinyinboxUI("box1")
+           )
+    ),
+    column(6, 
+           tags$div(
+             style = "padding: 50px; border: 1px solid gray; width: 500px;",
+             
+             
+             textAreaInput("txt_message", "Bericht"),
+             
+             selectInput("txt_message_user_tags",
+                         label="Notificatie gebruiker",
+                         choices = letters, #all_users,
+                         selected = NULL,
+                         multiple=TRUE),
+             
+             actionButton("txt_send", "Opslaan", icon = icon("envelope")),
+             tags$br(),
+             textOutput("txt_bericht_user"),
+             actionButton("testbtn","test"),
+             textOutput("testtxt")
+           )
+    )  
   )
+
+  
   
   
 )
@@ -51,6 +62,13 @@ server <- function(input, output, session) {
     paste("Bericht wordt verstuurd als: ", "get_naam_user(current_user)")
   })
   
+  observeEvent(input$testbtn, {
+    
+    session$sendCustomMessage("selectedMessages",
+                              list(shiny_id = "testid"))  
+    output$testtxt <- renderText(input$testid)
+    
+  })
   
   
   observeEvent(input$txt_send, {
