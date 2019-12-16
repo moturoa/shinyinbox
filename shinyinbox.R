@@ -263,7 +263,8 @@ shinyinbox <- function(input, output, session, messages,
   
   observeEvent(input$btn_del, {
     
-    session$sendCustomMessage("selectedMessages", list(shiny_id = session$ns("msgchecked")))  
+    session$sendCustomMessage("selectedMessages", list(inbox_id = session$ns("table_inbox"), 
+                                                       shiny_id = session$ns("msgchecked")))  
 
   })
   

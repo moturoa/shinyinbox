@@ -1,6 +1,6 @@
 Shiny.addCustomMessageHandler("selectedMessages", function(data){
   
-  let checked = $("#box1-table_inbox input:checked")
+  let checked = $("#"+data.inbox_id+" input:checked")
                 .map(function() { return this.id; })
                 .get(); 
                 

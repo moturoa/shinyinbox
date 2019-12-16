@@ -88,7 +88,7 @@ server <- function(input, output, session) {
     
   })  
   
-  messages_db <- reactivePoll(2000, session,
+  messages_db <- reactivePoll(500, session,
                               
                               checkFunc = function(){
                                 collect(tbl(msg$connection, 
