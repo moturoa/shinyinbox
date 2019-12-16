@@ -15,6 +15,18 @@ shorten <- function(x, n = 70){
 }
 
 
+# vector to e.g. "('aap','noot','mies')"
+to_sql_string <- function(x){
+  
+  paste0(
+    "('",
+    paste(x, collapse="','"),
+    "')"
+  )
+  
+}
+
+
 time_now_int <- function(){
   as.numeric(lubridate::now(tz="UTC"))
 }
@@ -251,10 +263,13 @@ shinyinbox <- function(input, output, session, messages,
   
   observeEvent(input$btn_del, {
     
-    cr <- grep("checkmsg_", input$checkedrows, value = TRUE)
-    req(cr)
+    session$sendCustomMessage("selectedMessages", list(shiny_id = session$ns("msgchecked")))  
 
-    ids <- gsub("checkmsg_","",cr)
+  })
+  
+  observeEvent(input$msgchecked, {
+    
+    ids <- gsub("checkmsg_", "", input$msgchecked)
     
     dbExecute(
      connection,

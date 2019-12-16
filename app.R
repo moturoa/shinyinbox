@@ -62,13 +62,7 @@ server <- function(input, output, session) {
     paste("Bericht wordt verstuurd als: ", "get_naam_user(current_user)")
   })
   
-  observeEvent(input$testbtn, {
-    
-    session$sendCustomMessage("selectedMessages",
-                              list(shiny_id = "testid"))  
-    output$testtxt <- renderText(input$testid)
-    
-  })
+  output$testtxt <- renderText(input$testid)
   
   
   observeEvent(input$txt_send, {
