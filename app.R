@@ -6,7 +6,9 @@ library(RSQLite)
 library(dbplyr)
 library(glue)
 
-source("shinyinbox.R")
+source("R/shinyinbox.R")
+source("R/composeBox.R")
+source("R/utils.R")
 
 # Configuratie object voor messages module
 msg <- list(
@@ -33,20 +35,8 @@ ui <- fluidPage(
            tags$div(
              style = "padding: 50px; border: 1px solid gray; width: 500px;",
              
-             
-             textAreaInput("txt_message", "Bericht"),
-             
-             selectInput("txt_message_user_tags",
-                         label="Notificatie gebruiker",
-                         choices = letters, #all_users,
-                         selected = NULL,
-                         multiple=TRUE),
-             
-             actionButton("txt_send", "Opslaan", icon = icon("envelope")),
-             tags$br(),
-             textOutput("txt_bericht_user"),
-             actionButton("testbtn","test"),
-             textOutput("testtxt")
+             composeBoxUI("send1")
+            
            )
     )  
   )
@@ -58,35 +48,7 @@ ui <- fluidPage(
 
 server <- function(input, output, session) {
 
-  output$txt_bericht_user <- renderText({
-    paste("Bericht wordt verstuurd als: ", "get_naam_user(current_user)")
-  })
   
-  output$testtxt <- renderText(input$testid)
-  
-  
-  observeEvent(input$txt_send, {
-    
-    if(input$txt_message != ""){
-      
-      msg_in <- tibble(id = uuid::UUIDgenerate(),
-                        msg = input$txt_message,
-                        users = "", #paste(replace_null_emptychar(input$txt_message_user_tags),collapse=";"),
-                        sender = "current_user",
-                        attachment = "",
-                        timestamp = now(tz="UTC"),
-                        timestamp_modification = now(tz="UTC"),
-                        deleted = FALSE)
-      
-      dbWriteTable(msg$connection, msg$table, msg_in, append = TRUE)
-      
-      updateTextAreaInput(session, "txt_message", value = "")
-      updateSelectInput(session, "txt_message_user_tags", selected = "")
-      
-      
-    }
-    
-  })  
   
   messages_db <- reactivePoll(500, session,
                               
@@ -99,6 +61,9 @@ server <- function(input, output, session) {
                                 dbReadTable(msg$connection, msg$table)
                               }
   )
+  
+  
+  callModule(composeBox, "send1", msg)
   
   observe({
     callModule(shinyinbox, "box1", 
