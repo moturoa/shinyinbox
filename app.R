@@ -37,8 +37,16 @@ ui <- fluidPage(
            tags$div(
              style = "padding: 50px; border: 1px solid gray; width: 500px;",
              
-             composeBoxUI("send1", users = letters)
+             composeBoxUI("send1", users = letters),
+             
+           ),
+           tags$div(
+             style = "padding: 50px; border: 1px solid aqua; width: 500px;",
+             
+             composeBoxUI("send2")
+             
            )
+           
     )  
   )
 
@@ -51,6 +59,7 @@ server <- function(input, output, session) {
 
   
   callModule(composeBox, "send1", msg)
+  callModule(composeBox, "send2", msg)
   callModule(shinyinbox, "box1", msg)
 
     

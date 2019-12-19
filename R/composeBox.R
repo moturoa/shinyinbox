@@ -20,7 +20,7 @@ composeBoxUI <- function(id, labels = list(bericht = "Bericht",
     actionButton(ns("txt_send"), "Opslaan", icon = icon("envelope")),
     
     tags$br(),
-    textOutput("txt_compose_comment")
+    textOutput(ns("txt_compose_comment"))
     
   )
   

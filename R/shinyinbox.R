@@ -49,7 +49,7 @@ shinyinboxUI <- function(id,
                     
            ),
            tabPanel("Edit", icon = icon("edit"),
-                    
+                    value = "tab_edit",
                     tags$div(style = "font-size: 1.1em;
                                       padding: 30px;",
                              
@@ -68,8 +68,8 @@ shinyinboxUI <- function(id,
                                           language$btn_undo, 
                                           icon = icon("undo"),
                                           class = "btn btn-sm")
-                    ),
-                    value = "tab_edit"
+                    )
+                    
            )
     )
   
