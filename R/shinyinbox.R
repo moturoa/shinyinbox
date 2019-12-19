@@ -1,7 +1,6 @@
 
 
 shinyinboxUI <- function(id,
-                         
                          language = list(tab_inbox = "Inbox",
                                          tab_message = "Bericht",
                                          tab_edit = "Edit",
@@ -77,10 +76,10 @@ shinyinboxUI <- function(id,
 
 
 
-shinyinbox <- function(input, output, session, msg){
+shinyinbox <- function(input, output, session, msg, filter_attachment = NULL){
   
   
-  messages_db <- reactivePoll(msg$poll_delay, 
+  messages_raw <- reactivePoll(msg$poll_delay, 
                               session,
                               
                               checkFunc = function(){
@@ -89,20 +88,31 @@ shinyinbox <- function(input, output, session, msg){
                                 )[[1]]
                               },
                               valueFunc = function(){
-                                dbReadTable(msg$connection, msg$table) %>%
-                                  dplyr::filter(deleted == 0) %>%
-                                  mutate(
-                                    Select = shinyInput(checkboxInput, nrow(.), paste0("checkmsg_", id), 
-                                                         value = FALSE, width = "10px"),
-                                     Datum = format(as_time(timestamp), "%d %b '%y"),
-                                     Message = shinyInput(actionLink, nrow(.), id = paste0("link_",id),
-                                                          label = shorten(msg),
-                                                          onclick = paste0('Shiny.onInputChange("', session$ns("message_click"),  
-                                                                           '",{id: this.id, nonce: Math.random()})')),
-                                     Actie = make_actie(id, session)
-                                  )
+                                dbReadTable(msg$connection, msg$table)
                               }
-                              )
+                  )
+  
+  messages_db <- reactive({
+    
+    out <- messages_raw() %>%
+      dplyr::filter(deleted == 0) %>%
+      mutate(
+        Select = shinyInput(checkboxInput, nrow(.), paste0("checkmsg_", id), 
+                            value = FALSE, width = "10px"),
+        Datum = format(as_time(timestamp), "%d %b '%y"),
+        Message = shinyInput(actionLink, nrow(.), id = paste0("link_",id),
+                             label = shorten(msg),
+                             onclick = paste0('Shiny.onInputChange("', session$ns("message_click"),  
+                                              '",{id: this.id, nonce: Math.random()})')),
+        Actie = make_actie(id, session)
+      )
+    
+    if(!is.null(filter_attachment)){
+      out <- filter(out, attachment %in% filter_attachment)  
+    }
+  
+  return(out)
+  })
   
   # id is vector
   shinyInput <- function(FUN, len, id, ..., label = NULL, expand_label = TRUE) {

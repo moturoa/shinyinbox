@@ -47,3 +47,11 @@ as_time <- function(x){
 empty_colnames <- function(dfr){
   setNames(dfr, rep(" ", ncol(dfr)))
 }
+
+
+replace_null_emptychar <- function(x){
+  x[is.null(x)] <- ""
+  return(x)
+}
+
+
