@@ -77,11 +77,32 @@ shinyinboxUI <- function(id,
 
 
 
-shinyinbox <- function(input, output, session, messages,
-                       connection, tableName, 
-                       edit_rights = TRUE,
-                       delete_rights = TRUE){
+shinyinbox <- function(input, output, session, msg){
   
+  
+  messages_db <- reactivePoll(msg$poll_delay, 
+                              session,
+                              
+                              checkFunc = function(){
+                                collect(tbl(msg$connection, 
+                                            sql(glue("SELECT max(timestamp_modification) FROM {msg$table} ")))
+                                )[[1]]
+                              },
+                              valueFunc = function(){
+                                dbReadTable(msg$connection, msg$table) %>%
+                                  dplyr::filter(deleted == 0) %>%
+                                  mutate(
+                                    Select = shinyInput(checkboxInput, nrow(.), paste0("checkmsg_", id), 
+                                                         value = FALSE, width = "10px"),
+                                     Datum = format(as_time(timestamp), "%d %b '%y"),
+                                     Message = shinyInput(actionLink, nrow(.), id = paste0("link_",id),
+                                                          label = shorten(msg),
+                                                          onclick = paste0('Shiny.onInputChange("', session$ns("message_click"),  
+                                                                           '",{id: this.id, nonce: Math.random()})')),
+                                     Actie = make_actie(id, session)
+                                  )
+                              }
+                              )
   
   # id is vector
   shinyInput <- function(FUN, len, id, ..., label = NULL, expand_label = TRUE) {
@@ -106,25 +127,24 @@ shinyinbox <- function(input, output, session, messages,
   }
   
   # no delete button if no rights
-  if(!delete_rights){
+  if(!msg$delete_rights){
     shinyjs::hide("btn_del")
   }
   
   # show these columns in the inbox
-  inbox_def <- data.frame(column = c("Select","Message","sender", "Datum", "Actie"),
-                          width = c(5,58,15,12,5),
-                          stringsAsFactors = FALSE)
+  inbox_def <- tibble::tibble(column = c("Select","Message","sender", "Datum", "Actie"),
+                          width = c(5,58,15,12,5))
   
-  if(!edit_rights){
+  if(!msg$edit_rights){
     inbox_def <- dplyr::filter(inbox_def, column != "Actie")
   }
-  if(!delete_rights){
+  if(!msg$delete_rights){
     inbox_def <- dplyr::filter(inbox_def, column != "Select")
   }
   
   # Prepare horrible format for column widths to datatable.
   el <- function(i){
-    list(width=paste0(inbox_def$width[i],"%"),
+    list(width = paste0(inbox_def$width[i],"%"),
                         targets = list(i))
   }
   
@@ -144,7 +164,8 @@ shinyinbox <- function(input, output, session, messages,
       
       out[i] <- as.character(
         actionLink(ids[i], label = icon("edit"), 
-                   onclick = glue("Shiny.onInputChange('{{id_click}}', {id: '{{ids[i]}}', nonce: Math.random()})",
+                   onclick = glue("Shiny.onInputChange('{{id_click}}',",
+                                  "{id: '{{ids[i]}}', nonce: Math.random()})",
                                   .open = "{{", .close = "}}"))
       )
       
@@ -153,35 +174,22 @@ shinyinbox <- function(input, output, session, messages,
   }
   
   
-  # Keep only non-deleted messages
-  messages <- filter(messages, deleted == 0)
-  n_row <- nrow(messages)
   
   # Make message links, checkboxes, formatting.
-  messages <- mutate(messages,
-      Select = shinyInput(checkboxInput, n_row, paste0("checkmsg_", id), 
-                          value = FALSE, width = "10px"),
-      Datum = format(as_time(timestamp), "%d %b '%y"),
-      Message = shinyInput(actionLink, n_row, id = paste0("link_",id),
-                           label = shorten(msg),
-                           onclick = paste0('Shiny.onInputChange("', session$ns("message_click"),  
-                                            '",{id: this.id, nonce: Math.random()})')),
-      Actie = make_actie(id, session)
-  )
-  
   hideTab("mail_container", target = "tab_bericht")
   hideTab("mail_container", target = "tab_edit")
   
+  # Klik op Inbox, hide Edit
   observeEvent(input$mail_container, {
     if(input$mail_container == "tab_inbox"){
       hideTab("mail_container", target = "tab_edit")
     }
   })
   
-  
+  # Inbox table
   output$table_inbox <- DT::renderDataTable(
     
-    messages[,inbox_def$column] %>%
+    messages_db()[,inbox_def$column] %>%
       reverse_dataframe() %>%
       empty_colnames() %>%
       DT::datatable(., 
@@ -212,7 +220,7 @@ shinyinbox <- function(input, output, session, messages,
     
   )
   
-  
+  # Klik op delete, vind geselecteerde rijen (JS)
   observeEvent(input$btn_del, {
     
     session$sendCustomMessage("selectedMessages", list(inbox_id = session$ns("table_inbox"), 
@@ -220,6 +228,7 @@ shinyinbox <- function(input, output, session, messages,
 
   })
   
+  # Messages zijn geselecteerd, en er is op delete gedrukt.
   observeEvent(input$msgchecked, {
     
     ids <- gsub("checkmsg_", "", input$msgchecked)
@@ -233,14 +242,14 @@ shinyinbox <- function(input, output, session, messages,
     
   })
   
-  
+  # Klik op message om te lezen.
   observeEvent(input$message_click, {
 
     link_id <- input$message_click$id
     id <- strsplit(link_id, "_")[[1]][2]
     
-    data <- tbl(connection, 
-                sql(glue("select * from {tableName} where id = '{id}'"))) %>% 
+    data <- tbl(msg$connection, 
+                sql(glue("select * from {msg$tableName} where id = '{id}'"))) %>% 
             collect
 
     output$txt_message <- renderUI({
@@ -264,7 +273,7 @@ shinyinbox <- function(input, output, session, messages,
         #     
         #   }
         # ),
-        tags$div(style="padding:10px",
+        tags$div(style="padding:10px;",
                  
                  if(data$users != ""){
                    tagList(
@@ -285,11 +294,11 @@ shinyinbox <- function(input, output, session, messages,
   })
   
   
-
+  # Klik op Edit knopje
   observeEvent(input$edit_click, {
     
     data <- tbl(connection, 
-                sql(glue("select * from {tableName} where id = '{input$edit_click$id}'"))) %>% 
+                sql(glue("select * from {msg$tableName} where id = '{input$edit_click$id}'"))) %>% 
       collect
     
     updateTextAreaInput(session, "txt_edit_message", value = data$msg)
@@ -304,7 +313,7 @@ shinyinbox <- function(input, output, session, messages,
     
     dbExecute(
       connection,
-      glue("UPDATE {tableName} SET ",
+      glue("UPDATE {msg$tableName} SET ",
            "msg = '{input$txt_edit_message}', ",
            "timestamp_modification = {time_now_int()} ",
            "WHERE id = '{input$edit_click$id}'")
@@ -319,8 +328,9 @@ shinyinbox <- function(input, output, session, messages,
   observeEvent(input$btn_edit_undo,{
     
     data <- tbl(connection, 
-               sql(glue("select * from {tableName} where id = '{input$edit_click$id}'"))) %>% 
+               sql(glue("select * from {msg$tableName} where id = '{input$edit_click$id}'"))) %>% 
       collect
+    
     updateTextAreaInput(session, "txt_edit_message", value = data$msg)
     
   })
