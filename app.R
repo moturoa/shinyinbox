@@ -37,7 +37,7 @@ ui <- fluidPage(
            tags$div(
              style = "padding: 50px; border: 1px solid gray; width: 500px;",
              
-             composeBoxUI("send1")
+             composeBoxUI("send1", users = letters)
            )
     )  
   )

@@ -233,11 +233,12 @@ shinyinbox <- function(input, output, session, msg){
     
     ids <- gsub("checkmsg_", "", input$msgchecked)
     
+    query <- glue("UPDATE {msg$table} SET ",
+                  "[deleted] = 1, timestamp_modification = {time_now_int()} ",
+                  "WHERE id IN {to_sql_string(ids)}")
+    
     dbExecute(
-     connection,
-       glue("UPDATE {tableName} SET ",
-            "[deleted] = 1, timestamp_modification = {time_now_int()} ",
-            "WHERE id IN {to_sql_string(ids)}")
+     msg$connection, query
     )
     
   })
@@ -249,7 +250,7 @@ shinyinbox <- function(input, output, session, msg){
     id <- strsplit(link_id, "_")[[1]][2]
     
     data <- tbl(msg$connection, 
-                sql(glue("select * from {msg$tableName} where id = '{id}'"))) %>% 
+                sql(glue("select * from {msg$table} where id = '{id}'"))) %>% 
             collect
 
     output$txt_message <- renderUI({
@@ -297,8 +298,8 @@ shinyinbox <- function(input, output, session, msg){
   # Klik op Edit knopje
   observeEvent(input$edit_click, {
     
-    data <- tbl(connection, 
-                sql(glue("select * from {msg$tableName} where id = '{input$edit_click$id}'"))) %>% 
+    data <- tbl(msg$connection, 
+                sql(glue("select * from {msg$table} where id = '{input$edit_click$id}'"))) %>% 
       collect
     
     updateTextAreaInput(session, "txt_edit_message", value = data$msg)
@@ -312,8 +313,8 @@ shinyinbox <- function(input, output, session, msg){
   observeEvent(input$btn_edit_save, {
     
     dbExecute(
-      connection,
-      glue("UPDATE {msg$tableName} SET ",
+      msg$connection,
+      glue("UPDATE {msg$table} SET ",
            "msg = '{input$txt_edit_message}', ",
            "timestamp_modification = {time_now_int()} ",
            "WHERE id = '{input$edit_click$id}'")
@@ -327,8 +328,8 @@ shinyinbox <- function(input, output, session, msg){
   
   observeEvent(input$btn_edit_undo,{
     
-    data <- tbl(connection, 
-               sql(glue("select * from {msg$tableName} where id = '{input$edit_click$id}'"))) %>% 
+    data <- tbl(msg$connection, 
+               sql(glue("select * from {msg$table} where id = '{input$edit_click$id}'"))) %>% 
       collect
     
     updateTextAreaInput(session, "txt_edit_message", value = data$msg)
