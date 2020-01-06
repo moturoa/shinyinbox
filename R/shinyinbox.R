@@ -47,7 +47,7 @@ shinyinboxUI <- function(id,
                                                  width = "100%")
                     )
            ),
-           tabPanel(language$tag$message, icon = icon("envelope-open-o"),
+           tabPanel(language$tab_message, icon = icon("envelope-open-o"),
                     
                     tags$div(class = "message_box",
                              style = "font-size: 1.1em;
@@ -96,7 +96,11 @@ attachShinyInboxDependencies(out)
 
 #' @rdname shinyinbox
 #' @export
-shinyinbox <- function(input, output, session, msg, filter_attachment = NULL){
+shinyinbox <- function(input, output, session, msg, 
+                       filter_attachment = NULL,
+                       filter_user = NULL,
+                       attachment_function = NULL
+                       ){
   
   
   messages_raw <- reactivePoll(msg$poll_delay, 
@@ -129,6 +133,11 @@ shinyinbox <- function(input, output, session, msg, filter_attachment = NULL){
     
     if(!is.null(filter_attachment)){
       out <- filter(out, attachment %in% filter_attachment)  
+    }
+    
+    if(!is.null(filter_user)){
+      # Use word boundary (\b), users are ;-separated
+      out <- filter(out, grepl(paste0("\\b",filter_user,"\\b"), users))  
     }
   
   return(out)
@@ -294,16 +303,18 @@ shinyinbox <- function(input, output, session, msg, filter_attachment = NULL){
                  tags$p(data$msg)
                  
         ),
-        # tags$div(style="padding:10px",
-        #    
-        #   if(messages$object_link_label[ii] != ""){
-        #     tagList(
-        #       tags$span(tags$strong("Link: ")),
-        #       tags$a(href = messages$object_link[ii], messages$object_link_label[ii])  
-        #     )
-        #     
-        #   }
-        # ),
+        
+        # Optionally, render some UI for the attachment.
+        tags$div(style="padding:10px",
+
+          if(data$attachment != ""){
+            if(!is.null(attachment_function)){
+              
+              attachment_function(data$attachment)
+            }
+
+          }
+        ),
         tags$div(style="padding:10px;",
                  
                  if(data$users != ""){

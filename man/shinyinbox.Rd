@@ -12,7 +12,15 @@ shinyinboxUI(
     btn_undo = "Undo", txt_message = "Bericht")
 )
 
-shinyinbox(input, output, session, msg, filter_attachment = NULL)
+shinyinbox(
+  input,
+  output,
+  session,
+  msg,
+  filter_attachment = NULL,
+  filter_user = NULL,
+  attachment_function = NULL
+)
 }
 \arguments{
 \item{id}{A unique ID for the inbox UI.}
