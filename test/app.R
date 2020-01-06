@@ -6,10 +6,7 @@ library(RSQLite)
 library(dbplyr)
 library(glue)
 
-source("R/shinyinbox.R")
-source("R/composeBox.R")
-source("R/utils.R")
-
+library(shinyinbox)
 
 # Configuratie object voor messages module
 msg <- list(
@@ -23,8 +20,6 @@ msg <- list(
 
 
 ui <- fluidPage(
-  
-  includeScript("www/selectedMessages.js"),
   
   tags$h3("Main inbox"),
   tags$p("Alle berichten komen hier terecht."),
@@ -74,6 +69,11 @@ ui <- fluidPage(
 
 server <- function(input, output, session) {
 
+  onStop(function() {
+    dbDisconnect(msg$connection)
+  })
+  
+  
   callModule(composeBox, "send1", msg)
   callModule(shinyinbox, "box1", msg)
   

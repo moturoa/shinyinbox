@@ -1,5 +1,23 @@
-
-
+#' A Shiny module for an inbox with messages
+#' @description Inbox for messages stored in a local database with edit and delete functionality. 
+#' For use in Shiny apps.
+#' @param id A unique ID for the inbox UI.
+#' @param language A list of labels to be used in the UI.
+#' @param input For the server function, Shiny usage.
+#' @param output For the server function, Shiny usage.
+#' @param session For the server function, Shiny usage.
+#' @param msg A configuration object.
+#' @param filter_attachment If set, only shows messages that include this value in the attachment.
+#' @rdname shinyinbox
+#' @examples
+#' # The configuration object may look like:
+#' msg <- list(
+#'   connection = dbConnect(RSQLite::SQLite(), "data/messages.sqlite"),
+#'   table = "messages",
+#'   edit_rights = TRUE,
+#'   delete_rights = TRUE,
+#'   poll_delay = 500)
+#' @export
 shinyinboxUI <- function(id,
                          language = list(tab_inbox = "Inbox",
                                          tab_message = "Bericht",
@@ -14,7 +32,7 @@ shinyinboxUI <- function(id,
   
   ns <- NS(id)
 
-  tabsetPanel(id = ns("mail_container"),
+  out <- tabsetPanel(id = ns("mail_container"),
            tabPanel(language$tab_inbox, icon = icon("envelope"),
                     value="tab_inbox",
                     tags$br(),
@@ -72,10 +90,12 @@ shinyinboxUI <- function(id,
            )
     )
   
+attachShinyInboxDependencies(out)
 }
 
 
-
+#' @rdname shinyinbox
+#' @export
 shinyinbox <- function(input, output, session, msg, filter_attachment = NULL){
   
   

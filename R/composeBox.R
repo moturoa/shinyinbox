@@ -1,4 +1,11 @@
-
+#' A Shiny module for composing messages
+#' @description A module (consisting of a UI and a server function) for composing messages. 
+#' @param id A unique ID for the module instance.
+#' @param labels A list with labels.
+#' @param users Optionally, a vector with user names. If provided, the compose box will include an option 
+#' to 'tag' users for the current message.
+#' @rdname composeBox
+#' @export
 composeBoxUI <- function(id, labels = list(bericht = "Bericht",
                                            tag_gebruiker = "Notificatie gebruiker",
                                            verstuur = "Verstuur"),
@@ -27,6 +34,8 @@ composeBoxUI <- function(id, labels = list(bericht = "Bericht",
   
 }
 
+#' @rdname composeBox
+#' @export
 composeBox <- function(input, output, session, msg, attachment = ""){
   
   
