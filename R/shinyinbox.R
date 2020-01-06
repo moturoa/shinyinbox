@@ -33,10 +33,11 @@ shinyinboxUI <- function(id,
   ns <- NS(id)
 
   out <- tabsetPanel(id = ns("mail_container"),
-           tabPanel(language$tab_inbox, icon = icon("envelope"),
-                    value="tab_inbox",
-                    tags$br(),
+           tabPanel(title = language$tab_inbox, 
+                    icon = icon("envelope"),
+                    value = "tab_inbox",
                     
+                    tags$br(),
                     actionButton(ns("btn_del"), 
                                  language$btn_delete, 
                                  class = "btn btn-light btn-sm", 
@@ -47,7 +48,9 @@ shinyinboxUI <- function(id,
                                                  width = "100%")
                     )
            ),
-           tabPanel(language$tab_message, icon = icon("envelope-open-o"),
+           tabPanel(title = language$tab_message, 
+                    icon = icon("envelope-open-o"),
+                    value = "tab_bericht",
                     
                     tags$div(class = "message_box",
                              style = "font-size: 1.1em;
@@ -61,12 +64,13 @@ shinyinboxUI <- function(id,
                                           language$btn_close, 
                                           class = "btn btn-sm",
                                           icon = icon("close"))
-                    ),
-                    value = "tab_bericht"
+                    )
                     
            ),
-           tabPanel("Edit", icon = icon("edit"),
+           tabPanel(title = "Edit", 
+                    icon = icon("edit"),
                     value = "tab_edit",
+                    
                     tags$div(style = "font-size: 1.1em;
                                       padding: 30px;",
                              
@@ -102,7 +106,10 @@ shinyinbox <- function(input, output, session, msg,
                        attachment_function = NULL
                        ){
   
+  hideTab("mail_container", target = "tab_bericht")
+  hideTab("mail_container", target = "tab_edit")
   
+  # Read messages from database.
   messages_raw <- reactivePoll(msg$poll_delay, 
                               session,
                               
@@ -116,12 +123,14 @@ shinyinbox <- function(input, output, session, msg,
                               }
                   )
   
+  # Messages: filtered, formatted
   messages_db <- reactive({
     
     out <- messages_raw() %>%
       dplyr::filter(deleted == 0) %>%
       mutate(
-        Select = shinyInput(checkboxInput, nrow(.), paste0("checkmsg_", id), 
+        Select = shinyInput(checkboxInput, nrow(.), 
+                            paste0("checkmsg_", id), 
                             value = FALSE, width = "10px"),
         Datum = format(as_time(timestamp), "%d %b '%y"),
         Message = shinyInput(actionLink, nrow(.), id = paste0("link_",id),
@@ -192,7 +201,7 @@ shinyinbox <- function(input, output, session, msg,
     lapply(1:nrow(inbox_def), el)
   )
     
-  
+  # Edit 'buttons' for each row in the table
   make_actie <- function(ids, session){
     
     len <- length(ids)
@@ -212,13 +221,7 @@ shinyinbox <- function(input, output, session, msg,
     out
   }
   
-  
-  
-  # Make message links, checkboxes, formatting.
-  hideTab("mail_container", target = "tab_bericht")
-  hideTab("mail_container", target = "tab_edit")
-  
-  # Klik op Inbox, hide Edit
+  # Click on Inbox, hide Edit
   observeEvent(input$mail_container, {
     if(input$mail_container == "tab_inbox"){
       hideTab("mail_container", target = "tab_edit")
