@@ -100,12 +100,12 @@ shinyinbox <- function(input, output, session, msg,
       )
     
     if(!is.null(filter_attachment)){
-      out <- filter(out, attachment %in% filter_attachment)  
+      out <- dplyr::filter(out, attachment %in% filter_attachment)  
     }
     
     if(!is.null(filter_user)){
       # Use word boundary (\b), users are ;-separated
-      out <- filter(out, grepl(paste0("\\b",filter_user,"\\b"), users))  
+      out <- dplyr::filter(out, grepl(paste0("\\b",filter_user,"\\b"), users))  
     }
   
   return(out)
