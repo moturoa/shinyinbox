@@ -7,9 +7,8 @@
 \usage{
 shinyinboxUI(
   id,
-  language = list(tab_inbox = "Inbox", tab_message = "Bericht", tab_edit = "Edit",
-    btn_delete = "Verwijder selectie", btn_close = "Sluiten", btn_save = "Opslaan",
-    btn_undo = "Undo", txt_message = "Bericht")
+  label_inbox = getOption("sib_inbox", "Inbox"),
+  label_delete = getOption("sib_delete", "Verwijder selectie")
 )
 
 shinyinbox(
@@ -19,13 +18,17 @@ shinyinbox(
   msg,
   filter_attachment = NULL,
   filter_user = NULL,
-  attachment_function = NULL
+  attachment_function = NULL,
+  label_message = getOption("sib_message", "Bericht"),
+  label_undo = getOption("sib_undo", "Undo"),
+  label_tagged = getOption("sib_tagged", "Tagged"),
+  label_close = getOption("sib_close", "Sluiten"),
+  label_edit = getOption("sib_edit", "Edit"),
+  label_save = getOption("sib_save", "Opslaan")
 )
 }
 \arguments{
 \item{id}{A unique ID for the inbox UI.}
-
-\item{language}{A list of labels to be used in the UI.}
 
 \item{input}{For the server function, Shiny usage.}
 
@@ -36,6 +39,8 @@ shinyinbox(
 \item{msg}{A configuration object.}
 
 \item{filter_attachment}{If set, only shows messages that include this value in the attachment.}
+
+\item{language}{A list of labels to be used in the UI.}
 }
 \description{
 Inbox for messages stored in a local database with edit and delete functionality. 

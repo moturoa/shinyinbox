@@ -19,28 +19,22 @@
 #'   poll_delay = 500)
 #' @export
 shinyinboxUI <- function(id,
-                         language = list(tab_inbox = "Inbox",
-                                         tab_message = "Bericht",
-                                         tab_edit = "Edit",
-                                         btn_delete = "Verwijder selectie",
-                                         btn_close = "Sluiten",
-                                         btn_save = "Opslaan",
-                                         btn_undo = "Undo",
-                                         txt_message = "Bericht"
-                                         )
+                         label_inbox = getOption("sib_inbox", "Inbox"),
+                         label_delete = getOption("sib_delete", "Verwijder selectie")
+                         
                          ){
   
   ns <- NS(id)
 
   out <- tabsetPanel(id = ns("mail_container"),
                      selected = "tab_inbox",
-           tabPanel(title = language$tab_inbox, 
+           tabPanel(title = label_inbox, 
                     icon = icon("envelope"),
                     value = "tab_inbox",
                     
                     tags$br(),
                     actionButton(ns("btn_del"), 
-                                 language$btn_delete, 
+                                 label_delete, 
                                  class = "btn btn-light btn-sm", 
                                  icon = icon("trash")),
                     
@@ -61,8 +55,15 @@ attachShinyInboxDependencies(out)
 shinyinbox <- function(input, output, session, msg, 
                        filter_attachment = NULL,
                        filter_user = NULL,
-                       attachment_function = NULL
+                       attachment_function = NULL,
+                       label_message = getOption("sib_message", "Bericht"),
+                       label_undo = getOption("sib_undo", "Undo"),
+                       label_tagged = getOption("sib_tagged", "Tagged"),
+                       label_close = getOption("sib_close", "Sluiten"),
+                       label_edit = getOption("sib_edit", "Edit"),
+                       label_save = getOption("sib_save", "Opslaan")
                        ){
+  
   
   hideTab("mail_container", target = "tab_bericht")
   hideTab("mail_container", target = "tab_edit")
@@ -280,7 +281,7 @@ shinyinbox <- function(input, output, session, msg,
                
                if(data$users != ""){
                  tagList(
-                   tags$span(tags$strong("Tagged: "), data$users)
+                   tags$span(tags$strong(glue("{label_tagged}: ")), data$users)
                  )
                  
                }
@@ -288,7 +289,7 @@ shinyinbox <- function(input, output, session, msg,
       
     )
     
-    pane <- tabPanel(title = "Bericht", 
+    pane <- tabPanel(title = label_message,
              icon = icon("envelope-open-o"),
              value = "tab_bericht",
              
@@ -301,7 +302,7 @@ shinyinbox <- function(input, output, session, msg,
                       tags$br(),
                       
                       actionButton(session$ns("btn_message_close"), 
-                                   "Sluiten", 
+                                   label_close, 
                                    class = "btn btn-sm",
                                    icon = icon("close"))
              )
@@ -321,7 +322,7 @@ shinyinbox <- function(input, output, session, msg,
       collect
     
     
-    pane <- tabPanel(title = "Edit", 
+    pane <- tabPanel(title = label_edit, 
              icon = icon("edit"),
              value = "tab_edit",
              
@@ -329,18 +330,18 @@ shinyinbox <- function(input, output, session, msg,
                                       padding: 30px;",
                       
                       textAreaInput(session$ns("txt_edit_message"), 
-                                    "Bericht", 
+                                    label_message, 
                                     resize="vertical",
                                     value = data$msg,
                                     height="300px"),
                       
                       actionButton(session$ns("btn_edit_save"), 
-                                   "Opslaan", 
+                                   label_save, 
                                    icon = icon("save"),
                                    class = "btn btn-sm"),
                       
                       actionButton(session$ns("btn_edit_undo"), 
-                                   "Undo", 
+                                   label_undo, 
                                    icon = icon("undo"),
                                    class = "btn btn-sm")
              )

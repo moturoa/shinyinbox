@@ -1,7 +1,7 @@
 Package: shinyinbox
 Type: Package
 Title: Simple Messaging and Inbox for Shiny
-Version: 0.1
+Version: 0.1-2
 Author: Remko Duursma
 Maintainer: Remko Duursma <remko@shintolabs.nl>
 Description: A simple system for in-app messages, stored in a local database. 
