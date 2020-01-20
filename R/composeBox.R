@@ -43,6 +43,10 @@ composeBox <- function(input, output, session, msg, attachment = ""){
     paste("Bericht wordt verstuurd als: ", "<<current user>>")
   })
   
+  if(is.null(attachment)){
+    attachment <- ""
+  }
+  
   observeEvent(input$txt_send, {
     
     if(input$txt_message != ""){
