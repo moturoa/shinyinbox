@@ -18,6 +18,7 @@
 #'   delete_rights = TRUE,
 #'   poll_delay = 500)
 #' @export
+#' @importFrom shiny tabsetPanel tabPanel insertTab hideTab
 shinyinboxUI <- function(id,
                          label_inbox = getOption("sib_inbox", "Inbox"),
                          label_delete = getOption("sib_delete", "Verwijder selectie")
@@ -26,11 +27,12 @@ shinyinboxUI <- function(id,
   
   ns <- NS(id)
 
-  out <- tabsetPanel(id = ns("mail_container"),
+  out <- shiny::tabsetPanel(id = ns("mail_container"),
                      selected = "tab_inbox",
-           tabPanel(title = label_inbox, 
+           shiny::tabPanel(title = label_inbox, 
                     icon = icon("envelope"),
                     value = "tab_inbox",
+                    #tabName = "tab_inbox",
                     
                     tags$br(),
                     actionButton(ns("btn_del"), 
@@ -65,9 +67,14 @@ shinyinbox <- function(input, output, session, msg,
                        ){
   
   
-  hideTab("mail_container", target = "tab_bericht")
-  hideTab("mail_container", target = "tab_edit")
+  shiny::hideTab("mail_container", target = "tab_bericht")
+  shiny::hideTab("mail_container", target = "tab_edit")
   
+  
+  # --> naar R6 config
+  if(is.null(msg$attachment_column)){
+    msg$attachment_column <- "attachment"
+  }
   
   # Read messages from database.
   messages_raw <- reactivePoll(msg$poll_delay, 
@@ -78,6 +85,7 @@ shinyinbox <- function(input, output, session, msg,
                                             sql(glue("SELECT max(timestamp_modification) FROM {msg$table} ")))
                                 )[[1]]
                               },
+                              
                               valueFunc = function(){
                                 dbReadTable(msg$connection, msg$table)
                               }
@@ -101,7 +109,7 @@ shinyinbox <- function(input, output, session, msg,
       )
     
     if(!is.null(filter_attachment)){
-      out <- dplyr::filter(out, attachment %in% filter_attachment)  
+      out <- dplyr::filter(out, !!sym(msg$attachment_column) %in% filter_attachment)  
     }
     
     if(!is.null(filter_user)){
@@ -252,6 +260,10 @@ shinyinbox <- function(input, output, session, msg,
     link_id <- input$message_click$id
     id <- strsplit(link_id, "_")[[1]][2]
     
+    attach_col <- ifelse(is.null(msg$attachment_column),
+                         "attachment",
+                         msg$attachment_column) 
+    
     data <- tbl(msg$connection, 
                 sql(glue("select * from {msg$table} where id = '{id}'"))) %>% 
             collect
@@ -269,10 +281,10 @@ shinyinbox <- function(input, output, session, msg,
       # Optionally, render some UI for the attachment.
       tags$div(style="padding:10px",
                
-               if(data$attachment != ""){
+               if(data[[attach_col]] != ""){
                  if(!is.null(attachment_function)){
                    
-                   attachment_function(data$attachment)
+                   attachment_function(data[[attach_col]])
                  }
                  
                }
@@ -289,7 +301,7 @@ shinyinbox <- function(input, output, session, msg,
       
     )
     
-    pane <- tabPanel(title = label_message,
+    pane <- shiny::tabPanel(title = label_message,
              icon = icon("envelope-open-o"),
              value = "tab_bericht",
              
@@ -309,7 +321,7 @@ shinyinbox <- function(input, output, session, msg,
              
     )
     
-    appendTab("mail_container", pane, select = TRUE)
+    shiny::appendTab("mail_container", pane, select = TRUE)
     
   })
   
@@ -322,25 +334,25 @@ shinyinbox <- function(input, output, session, msg,
       collect
     
     
-    pane <- tabPanel(title = label_edit, 
+    pane <- shiny::tabPanel(title = label_edit, 
              icon = icon("edit"),
              value = "tab_edit",
              
              tags$div(style = "font-size: 1.1em;
                                       padding: 30px;",
                       
-                      textAreaInput(session$ns("txt_edit_message"), 
+                      shiny::textAreaInput(session$ns("txt_edit_message"), 
                                     label_message, 
                                     resize="vertical",
                                     value = data$msg,
                                     height="300px"),
                       
-                      actionButton(session$ns("btn_edit_save"), 
+                      shiny::actionButton(session$ns("btn_edit_save"), 
                                    label_save, 
                                    icon = icon("save"),
                                    class = "btn btn-sm"),
                       
-                      actionButton(session$ns("btn_edit_undo"), 
+                      shiny::actionButton(session$ns("btn_edit_undo"), 
                                    label_undo, 
                                    icon = icon("undo"),
                                    class = "btn btn-sm")
@@ -348,7 +360,7 @@ shinyinbox <- function(input, output, session, msg,
              
     )
     
-    appendTab("mail_container", pane, select = TRUE)
+    shiny::appendTab("mail_container", pane, select = TRUE)
     
   })
   
@@ -362,8 +374,8 @@ shinyinbox <- function(input, output, session, msg,
            "WHERE id = '{input$edit_click$id}'")
     )
     
-    updateTabsetPanel(session, "mail_container", selected = "tab_inbox")
-    removeTab("mail_container", target = "tab_edit")
+    shiny::updateTabsetPanel(session, "mail_container", selected = "tab_inbox")
+    shiny::removeTab("mail_container", target = "tab_edit")
     
     
   })
@@ -374,14 +386,14 @@ shinyinbox <- function(input, output, session, msg,
                sql(glue("select * from {msg$table} where id = '{input$edit_click$id}'"))) %>% 
       collect
     
-    updateTextAreaInput(session, "txt_edit_message", value = data$msg)
+    shiny::updateTextAreaInput(session, "txt_edit_message", value = data$msg)
     
   })
   
   observeEvent(input$btn_message_close, {
     
-    updateTabsetPanel(session, "mail_container", selected = "tab_inbox")
-    removeTab("mail_container", target = "tab_bericht")
+    shiny::updateTabsetPanel(session, "mail_container", selected = "tab_inbox")
+    shiny::removeTab("mail_container", target = "tab_bericht")
     
   })
   

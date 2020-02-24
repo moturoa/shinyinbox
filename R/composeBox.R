@@ -36,15 +36,20 @@ composeBoxUI <- function(id, labels = list(bericht = "Bericht",
 
 #' @rdname composeBox
 #' @export
-composeBox <- function(input, output, session, msg, attachment = ""){
+composeBox <- function(input, output, session, msg, attachment = "", current_user = NULL){
   
   
   output$txt_compose_comment <- renderText({
-    paste("Bericht wordt verstuurd als: ", "<<current user>>")
+    req(current_user)
+    paste("Bericht wordt verstuurd als: ", current_user)
   })
   
   if(is.null(attachment)){
     attachment <- ""
+  }
+  
+  if(is.null(current_user)){
+    current_user <- ""
   }
   
   observeEvent(input$txt_send, {
@@ -55,11 +60,16 @@ composeBox <- function(input, output, session, msg, attachment = ""){
                        msg = input$txt_message,
                        users = paste(replace_null_emptychar(input$txt_message_user_tags),
                                      collapse=";"),
-                       sender = "<<current_user>>",
+                       sender = current_user,
                        attachment = attachment,
                        timestamp = now(tz="UTC"),
                        timestamp_modification = now(tz="UTC"),
                        deleted = FALSE)
+      
+      # --> naar een schema config voor msg database
+      if(!is.null(msg$attachment_column)){
+        names(msg_in)[names(msg_in) == "attachment"] <- msg$attachment_column
+      }
       
       dbWriteTable(msg$connection, msg$table, msg_in, append = TRUE)
       

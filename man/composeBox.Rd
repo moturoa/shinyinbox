@@ -12,7 +12,7 @@ composeBoxUI(
   users = NULL
 )
 
-composeBox(input, output, session, msg, attachment = "")
+composeBox(input, output, session, msg, attachment = "", current_user = NULL)
 }
 \arguments{
 \item{id}{A unique ID for the module instance.}
