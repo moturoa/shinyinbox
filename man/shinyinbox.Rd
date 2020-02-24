@@ -19,6 +19,7 @@ shinyinbox(
   filter_attachment = NULL,
   filter_user = NULL,
   attachment_function = NULL,
+  ...,
   label_message = getOption("sib_message", "Bericht"),
   label_undo = getOption("sib_undo", "Undo"),
   label_tagged = getOption("sib_tagged", "Tagged"),

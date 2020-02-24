@@ -58,6 +58,7 @@ shinyinbox <- function(input, output, session, msg,
                        filter_attachment = NULL,
                        filter_user = NULL,
                        attachment_function = NULL,
+                       ...,   # argumenten naar attachment_function
                        label_message = getOption("sib_message", "Bericht"),
                        label_undo = getOption("sib_undo", "Undo"),
                        label_tagged = getOption("sib_tagged", "Tagged"),
@@ -284,7 +285,7 @@ shinyinbox <- function(input, output, session, msg,
                if(data[[attach_col]] != ""){
                  if(!is.null(attachment_function)){
                    
-                   attachment_function(data[[attach_col]])
+                   attachment_function(data[[attach_col]], ...)
                  }
                  
                }
