@@ -2,6 +2,8 @@
 
 export(composeBox)
 export(composeBoxUI)
+export(inboxCompose)
+export(inboxComposeUI)
 export(shinyinbox)
 export(shinyinboxUI)
 importFrom(htmltools,attachDependencies)

@@ -54,6 +54,8 @@ composeBox <- function(input, output, session, msg, attachment = "", current_use
   
   observeEvent(input$txt_send, {
     
+    print(paste("sending", input$txt_send))
+    
     if(input$txt_message != ""){
       
       msg_in <- tibble(id = uuid::UUIDgenerate(),
@@ -61,7 +63,7 @@ composeBox <- function(input, output, session, msg, attachment = "", current_use
                        users = paste(replace_null_emptychar(input$txt_message_user_tags),
                                      collapse=";"),
                        sender = current_user,
-                       attachment = attachment,
+                       attachment = isolate(attachment),
                        timestamp = now(tz="UTC"),
                        timestamp_modification = now(tz="UTC"),
                        deleted = FALSE)

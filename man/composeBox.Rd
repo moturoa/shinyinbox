@@ -7,8 +7,8 @@
 \usage{
 composeBoxUI(
   id,
-  labels = list(bericht = "Bericht", tag_gebruiker = "Notificatie gebruiker", verstuur =
-    "Verstuur"),
+  labels = list(bericht = "Bericht", tag_gebruiker = "Notificatie gebruiker", verstuur
+    = "Verstuur"),
   users = NULL
 )
 
