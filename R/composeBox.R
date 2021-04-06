@@ -64,9 +64,9 @@ composeBox <- function(input, output, session, msg, attachment = "", current_use
                                      collapse=";"),
                        sender = current_user,
                        attachment = isolate(attachment),
-                       timestamp = now(tz="UTC"),
-                       timestamp_modification = now(tz="UTC"),
-                       deleted = FALSE)
+                       timestamp = as.integer(lubridate::now(tz="UTC")),
+                       timestamp_modification = as.integer(now(tz="UTC")),
+                       deleted = 0)
       
       # --> naar een schema config voor msg database
       if(!is.null(msg$attachment_column)){

@@ -246,7 +246,7 @@ shinyinbox <- function(input, output, session, msg,
     ids <- gsub("checkmsg_", "", input$msgchecked)
     
     query <- glue("UPDATE {msg$table} SET ",
-                  "[deleted] = 1, timestamp_modification = {time_now_int()} ",
+                  "deleted = 1, timestamp_modification = {time_now_int()} ",
                   "WHERE id IN {to_sql_string(ids)}")
     
     dbExecute(
